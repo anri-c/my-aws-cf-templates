@@ -1,0 +1,51 @@
+
+Parameters:
+  AccessKeySerial:
+    Type: "String"
+
+  AccessKeyStatus:
+    Type: "String"
+    AllowedValues:
+      - "Active"
+      - "Inactive"
+    Default: "Inactive"
+
+
+Resources:
+  GrafanaCloudwatch:
+    Type: "AWS::IAM::User"
+
+  GrafanaCloudwatchPolicy:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyName: "GrafanaCloudwatchPolicy"
+      Users:
+        - Ref: "GrafanaCloudwatch"
+      PolicyDocument:
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "cloudwatch:List*"
+              - "cloudwatch:Get*"
+              - "cloudwatch:Describe*"
+            Resource: "*"
+
+  GrafanaCloudwatchKey:
+    Type: "AWS::IAM::AccessKey"
+    Properties:
+      Serial:
+        Ref: "AccessKeySerial"
+      Status:
+        Ref: "AccessKeyStatus"
+      UserName:
+        Ref: "GrafanaCloudwatch"
+
+Outputs:
+  AccessKey:
+    Value:
+      Ref: "GrafanaCloudwatchKey"
+  SecretAccessKey:
+    Value:
+      "Fn::GetAtt":
+        - "GrafanaCloudwatchKey"
+        - "SecretAccessKey"
