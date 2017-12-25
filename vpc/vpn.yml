@@ -1,0 +1,52 @@
+---
+
+Parameters:
+  VpcId:
+    Type: "AWS::EC2::VPC::Id"
+  RouterIpAddress:
+    Type: "String"
+  CidrBlock:
+    Type: "String"
+
+Resources:
+  CustomerGateway:
+    Type: "AWS::EC2::CustomerGateway"
+    Properties:
+      BgpAsn: "65000"
+      IpAddress:
+        Ref: "RouterIpAddress"
+      Type: "ipsec.1"
+
+  VpnGateway:
+    Type: "AWS::EC2::VPNGateway"
+    Properties:
+      Type: "ipsec.1"
+
+  VpnConnection:
+    Type: "AWS::EC2::VPNConnection"
+    Properties:
+      Type: "ipsec.1"
+      CustomerGatewayId:
+        Ref: "CustomerGateway"
+      StaticRoutesOnly: "false"
+      VpnGatewayId:
+        Ref: "VpnGateway"
+
+  VpnGatewayAttachment:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      VpnGatewayId:
+        Ref: "VpnGateway"
+      VpcId:
+        Ref: "VpcId"
+
+  VpnGatewayRoutePropagation:
+    DependsOn:
+      - "VpnGateway"
+      - "VpnGatewayAttachment"
+    Type: "AWS::EC2::VPNGatewayRoutePropagation"
+    Properties:
+      RouteTableIds:
+        - "Fn::ImportValue": "PrivateRouteTableId"
+      VpnGatewayId:
+        Ref: "VpnGateway"
